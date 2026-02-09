@@ -1,0 +1,13 @@
+const mongeoose = require("mongoose");
+const { Schema, model } = mongeoose;
+const MessageSchema = new Schema(
+  {
+    text: { type: String },
+    file: { type: String },
+    sender: { type: Schema.Types.ObjectId, ref: "User" },
+    recipient: { type: Schema.Types.ObjectId, ref: "User" },
+  },
+  { timestamps: true },
+);
+const MessageModel = model("Message", MessageSchema);
+module.exports = MessageModel;
