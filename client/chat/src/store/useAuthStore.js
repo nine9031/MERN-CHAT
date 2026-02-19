@@ -1,109 +1,82 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios";
+import api from "../services/api";
 import toast from "react-hot-toast";
-import { io } from "socket.io-client";
 
-const BASE_URL = "http://localhost:5001"; // URL Backend หลัก (สำหรับ Socket)
-
+// useAuthStore เป็น react hook
+// มี func set get มันจะประกาศ attibute ต่างๆ ที่แชร์กัน
+// useAuthStore ไว้ใช้สำหรับจัดการ auth อย่างเดียว
 export const useAuthStore = create((set, get) => ({
+  // อันนี้เรากำหนด state ไว้แชร์กัน
+  //   มีใคร login อยู่
   authUser: null,
+  //   ระบบเราเช็คอยู่ไหม
+  //   design ไว้เพื่อ animation
+  isCheckingAuth: true,
+  //   เค้า sign up อยู่ไหม จะมี state check ตลอด
   isSigningUp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
-  isCheckingAuth: true,
+  //   มี user online อยู่ไหม
   onlineUsers: [],
-  socket: null,
-
+  //   func
+  //   check ใคร login
   checkAuth: async () => {
     try {
-      const res = await axiosInstance.get("/auth/check");
-      set({ authUser: res.data });
-      get().connectSocket(); // ถ้ามี User ให้ต่อ Socket ทันที
+      // เรียกใช้ api
+      const response = await api.get("/user/check");
+      set({ authUser: response.data });
     } catch (error) {
-      console.log("Error in checkAuth:", error);
+      console.log("Error in CheckAuth", error);
       set({ authUser: null });
+      //   finally ทำเสมอ
     } finally {
       set({ isCheckingAuth: false });
     }
   },
-
-  signup: async (data) => {
+  signUp: async (data) => {
     set({ isSigningUp: true });
     try {
-      const res = await axiosInstance.post("/auth/signup", data);
-      set({ authUser: res.data });
-      toast.success("Account created successfully");
-      get().connectSocket();
+      const response = await api.post("/user/register", data);
+      set({ authUser: response.data });
+      toast.success("Account created successfuly");
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.log(error);
+      toast.error(error.response.data.message || "sign up failed");
     } finally {
       set({ isSigningUp: false });
     }
   },
-
   login: async (data) => {
-    set({ isLoggingIn: true });
+    set({ isSigningUp: true });
     try {
-      const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data });
+      const response = await api.post("/user/login", data);
+      set({ authUser: response.data });
       toast.success("Logged in successfully");
-      get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response.data.message || "Log in failed");
     } finally {
-      set({ isLoggingIn: false });
+      set({ isSigningUp: false });
     }
   },
-
-  logout: async () => {
+  logOut: async () => {
     try {
-      await axiosInstance.post("/auth/logout");
+      const response = await api.post("/user/logout");
       set({ authUser: null });
-      toast.success("Logged out successfully");
-      get().disconnectSocket(); // ตัดการเชื่อมต่อเมื่อออก
+      toast.success(response.data.message);
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response.data.message || "Log out failed");
     }
   },
-
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
-      // data ในที่นี้คือ { profilePic: "base64 string..." }
-      // Backend จะรับค่านี้แล้วส่งไป Cloudinary เอง
-      const res = await axiosInstance.put("/auth/update-profile", data);
-      set({ authUser: res.data });
-      toast.success("Profile updated successfully");
+      const response = await api.put("/user/update-profile", data);
+      set({ authUser: response.data.user });
+      toast.success(response.data.message);
     } catch (error) {
-      console.log("error in update profile:", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response.data.message || "Update profile failed");
     } finally {
       set({ isUpdatingProfile: false });
-    }
-  },
-
-  connectSocket: () => {
-    const { authUser } = get();
-    if (!authUser || get().socket?.connected) return;
-
-    const socket = io(BASE_URL, {
-      query: {
-        userId: authUser._id, // ส่ง UserID ไปผูกกับ Socket ID ที่ฝั่ง Server
-      },
-    });
-
-    socket.connect();
-    set({ socket: socket });
-
-    // ฟัง event ว่าใครออนไลน์บ้าง
-    socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
-    });
-  },
-
-  disconnectSocket: () => {
-    if (get().socket?.connected) {
-      get().socket.disconnect();
     }
   },
 }));
