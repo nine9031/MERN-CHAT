@@ -1,15 +1,16 @@
-import React from "react";
-import { RouterProvider } from "react-router";
-import router from "./routes/Router";
+import { BrowserRouter } from "react-router-dom";
+import Router from "./routes/Router";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
   return (
     <div>
-      <Navbar />
-      <RouterProvider router={router} />
-      {/* <Footer /> */}
+      <BrowserRouter>
+        <Navbar />
+        <Router />
+        <Toaster />
+      </BrowserRouter>
     </div>
   );
 };

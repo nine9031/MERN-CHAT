@@ -1,14 +1,13 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const UserModel = require("../models/User");
-const e = require("express");
 require("dotenv").config();
+const cloudinary = require("../configs/cloudinary");
 const secret = process.env.SECRET;
 const node_mode = process.env.node_mode;
-const cloudinary = require("../configs/cloudinary");
 
 exports.register = async (req, res) => {
-  const { fullname, email, password } = req.body;
+  const { fullname, email, password, profilePic } = req.body;
   if (!fullname || !email || !password) {
     return res.status(400).send({
       message: "Please Provide All Required!",
@@ -28,6 +27,7 @@ exports.register = async (req, res) => {
       fullname,
       email,
       password: hashedPassword,
+      profilePic,
     });
     //Auto login after registration
     jwt.sign(
@@ -49,8 +49,9 @@ exports.register = async (req, res) => {
         res.status(201).send({
           message: "User registered and logged in successfully!",
           id: user._id,
+          fullname,
           email,
-          accessToken: token,
+          profilePic,
         });
       },
     );
@@ -123,6 +124,79 @@ exports.logout = async (req, res) => {
   }
 };
 
+// exports.updateProfile = async (req, res) => {
+//   try {
+//     const { fullname, profilePic } = req.body;
+//     const userId = req.user.id;
+//     // check เงื่อนไขที่ซับซ้อนก่อน
+//     if (fullname && profilePic) {
+//       // Upload pic to cloudinary
+//       const uploadResponse = await cloudinary.uploader.upload(profilePic);
+//       if (!uploadResponse) {
+//         res
+//           .status(500)
+//           .json({ message: "Error while uploading profile picture" });
+//       }
+
+//       const updatedUser = await UserModel.findByIdAndUpdate(
+//         userId,
+//         {
+//           fullname: fullname,
+//           profilePic: uploadResponse.secure_url,
+//           // new true สั่ง return ตัวใหม่ ทupload มาแล้ว ไว้ที่ updatesUser
+//         },
+//         { new: true },
+//       );
+//       if (!updatedUser) {
+//         res.status(500).json({ message: "Error while updating user profile" });
+//       }
+
+//       res.status(200).json({ message: "User profile updated successfully" });
+//     } else if (profilePic) {
+//       const uploadResponse = await cloudinary.uploader.upload(profilePic);
+//       if (!uploadResponse) {
+//         res
+//           .status(500)
+//           .json({ message: "Error while uploading profile picture" });
+//       }
+
+//       const updatedUser = await UserModel.findByIdAndUpdate(
+//         userId,
+//         {
+//           profilePic: uploadResponse.secure_url,
+//           // new true สั่ง return ตัวใหม่ ทupload มาแล้ว ไว้ที่ updatesUser
+//         },
+//         { new: true },
+//       );
+//       if (!updatedUser) {
+//         res.status(500).json({ message: "Error while updating user profile" });
+//       }
+
+//       res.status(200).json({ message: "User profile updated successfully" });
+//     } else if (fullname) {
+//       const updatedUser = await UserModel.findByIdAndUpdate(
+//         userId,
+//         {
+//           fullname: fullname,
+//           // new true สั่ง return ตัวใหม่ ทupload มาแล้ว ไว้ที่ updatesUser
+//         },
+//         { new: true },
+//       );
+//       if (!updatedUser) {
+//         res.status(500).json({ message: "Error while updating user profile" });
+//       }
+
+//       res.status(200).json({ message: "User profile updated successfully" });
+//     } else {
+//       res.status(200).json({ message: "Nothing is updated" });
+//     }
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ message: "Internal Server Error while updating user profile" });
+//   }
+// };
+
 exports.updateProfile = async (req, res) => {
   try {
     const { fullname, profilePic } = req.body;
@@ -163,7 +237,7 @@ exports.updateProfile = async (req, res) => {
       userId,
       updateData,
       { new: true }, // ให้ return ข้อมูลใหม่ที่อัปเดตแล้วกลับมา
-    );
+    ).select("-password");
 
     if (!updatedUser) {
       return res

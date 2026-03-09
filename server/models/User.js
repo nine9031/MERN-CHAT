@@ -1,15 +1,17 @@
-const e = require("express");
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 
-const userSchema = new Schema(
+// กำหนด attribute
+const UserSchema = new Schema(
   {
-    fullname: { type: String, required: true, min: 2 },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, min: 6 },
-    profilePic: { type: String, default: "" },
+    fullname: { type: String, required: true, minlength: 4 }, // แก้เป็น required และ minlength
+    email: { type: String, required: true, unique: true }, // แก้เป็น required
+    password: { type: String, required: true, minlength: 6 }, // แก้เป็น required และ minlength
+    profilePic: { type: String, default: "" }, // แก้เป็น required
   },
   { timestamps: true },
 );
-const UserModel = model("User", userSchema);
+
+// model
+const UserModel = model("User", UserSchema);
 module.exports = UserModel;
