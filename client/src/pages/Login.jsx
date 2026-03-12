@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 const Login = () => {
   // แก้ไขตรงนี้: ปกติ Zustand จะใช้ destructuring จาก function
-  const { login, isSigningIn } = useAuthStore();  
+  const { login, isLoggingIn } = useAuthStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -89,14 +89,14 @@ const Login = () => {
             </div>
 
             <button
-              disabled={isSigningIn}
+              disabled={isLoggingIn}
               type="submit"
               className="w-full bg-[#ff7b5c] hover:bg-[#ff6a47] text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70"
             >
-              {isSigningIn ? (
+              {isLoggingIn ? (
                 <>
                   <Loader className="h-5 w-5 animate-spin" />
-                  <span>Signing in...</span>
+                  <span>Logging in...</span>
                 </>
               ) : (
                 "Sign In"

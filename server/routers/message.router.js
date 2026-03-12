@@ -6,7 +6,7 @@ const {
   sendMessage,
   getMessage,
 } = require("../controllers/message.controller");
-const { protectedRoute } = require("../middlewares/auth");
+const { protectedRoute } = require("../middlewares/auth.middleware");
 
 router.get("/users", protectedRoute, getUsersForSidebar);
 router.get("/:id", protectedRoute, getMessage);

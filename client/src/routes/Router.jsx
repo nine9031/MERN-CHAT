@@ -5,6 +5,7 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import { useAuthStore } from "../store/useAuthStore";
 import { Loader } from "lucide-react";
+import Profile from "../pages/Profile";
 
 const Router = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -31,6 +32,10 @@ const Router = () => {
         <Route
           path="/register"
           element={!authUser ? <Register /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/profile"
+          element={authUser ? <Profile /> : <Navigate to="/login" />}
         />
       </Routes>
     </div>
